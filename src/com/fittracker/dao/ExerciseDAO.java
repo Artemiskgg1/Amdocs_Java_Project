@@ -63,4 +63,27 @@ public class ExerciseDAO {
             return ps.executeUpdate() == 1;
         }
     }
+
+    // Add this method to your ExerciseDAO.java class
+
+public Exercise findById(long id) throws SQLException {
+    String sql = "SELECT EXERCISE_ID, NAME, CATEGORY, UNIT, MET_VALUE FROM EXERCISE WHERE EXERCISE_ID = ?";
+    try (Connection c = Database.getConnection();
+         PreparedStatement ps = c.prepareStatement(sql)) {
+        ps.setLong(1, id);
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                Exercise e = new Exercise();
+                e.exerciseId = rs.getLong("EXERCISE_ID");
+                e.name       = rs.getString("NAME");
+                e.category   = rs.getString("CATEGORY");
+                e.unit       = rs.getString("UNIT");
+                double m     = rs.getDouble("MET_VALUE");
+                e.metValue   = rs.wasNull() ? null : m;
+                return e;
+            }
+            return null;
+        }
+    }
+}
 }

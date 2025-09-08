@@ -7,4 +7,6 @@ public class WorkoutSet {
     public Double  weightKg;
     public Integer durationMin;
     public Double  distKm;
+    // Add this field to your WorkoutSet class
+public Integer steps;
 }

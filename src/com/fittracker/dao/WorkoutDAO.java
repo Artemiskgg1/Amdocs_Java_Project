@@ -1,6 +1,7 @@
 package com.fittracker.dao;
 
 import com.fittracker.db.Database;
+import com.fittracker.model.StepMetrics;
 import com.fittracker.model.WorkoutSession;
 import com.fittracker.model.WorkoutSet;
 import java.sql.*;
@@ -8,8 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WorkoutDAO {
-
-    public long createSession(WorkoutSession s) throws SQLException {
+public long createSession(WorkoutSession s) throws SQLException {
         try (Connection c = Database.getConnection();
              CallableStatement cs = c.prepareCall("{ call CREATE_SESSION(?, ?, ?, ?, ?) }")) {
             cs.setLong(1, s.userId);
@@ -24,7 +24,7 @@ public class WorkoutDAO {
 
     public void addSet(WorkoutSet w) throws SQLException {
         try (Connection c = Database.getConnection();
-             CallableStatement cs = c.prepareCall("{ call ADD_SET(?, ?, ?, ?, ?, ?, ?) }")) {
+             CallableStatement cs = c.prepareCall("{ call ADD_SET(?, ?, ?, ?, ?, ?, ?, ?) }")) {
             cs.setLong(1, w.sessionId);
             cs.setLong(2, w.exerciseId);
             cs.setInt(3, w.setNo);
@@ -32,6 +32,7 @@ public class WorkoutDAO {
             if (w.weightKg != null) cs.setDouble(5, w.weightKg); else cs.setNull(5, Types.NUMERIC);
             if (w.durationMin != null) cs.setInt(6, w.durationMin); else cs.setNull(6, Types.INTEGER);
             if (w.distKm != null) cs.setDouble(7, w.distKm); else cs.setNull(7, Types.NUMERIC);
+            if (w.steps != null) cs.setInt(8, w.steps); else cs.setNull(8, Types.INTEGER);
             cs.execute();
         }
     }
@@ -73,6 +74,32 @@ public class WorkoutDAO {
              PreparedStatement ps = c.prepareStatement("DELETE FROM WORKOUT_SESSION WHERE SESSION_ID=?")) {
             ps.setLong(1, sessionId);
             return ps.executeUpdate() == 1;
+        }
+    }
+
+    public StepMetrics calculateStepMetrics(int steps, String activityType, double userWeight, int durationMin) throws SQLException {
+        try (Connection c = Database.getConnection();
+             CallableStatement cs = c.prepareCall("{ ? = call CALCULATE_STEP_METRICS(?, ?, ?, ?) }")) {
+
+            cs.registerOutParameter(1, Types.REF_CURSOR); // Oracle specific
+            cs.setInt(2, steps);
+            cs.setString(3, activityType);
+            cs.setDouble(4, userWeight);
+            cs.setInt(5, durationMin);
+            cs.execute();
+
+            try (ResultSet rs = (ResultSet) cs.getObject(1)) {
+                if (rs.next()) {
+                    return new StepMetrics(
+                        rs.getInt("STEPS_COUNT"),
+                        rs.getDouble("DISTANCE_KM"),
+                        rs.getDouble("CALORIES_BURNED"),
+                        rs.getDouble("MET_VALUE"),
+                        rs.getDouble("AVG_SPEED_KMH")
+                    );
+                }
+            }
+            return null;
         }
     }
 }

@@ -50,20 +50,25 @@ END;
 
 -- Procedure to add a set into a session
 CREATE OR REPLACE PROCEDURE ADD_SET(
-  p_session_id  IN NUMBER,
-  p_exercise_id IN NUMBER,
-  p_set_no      IN NUMBER,
-  p_reps        IN NUMBER,
-  p_weight_kg   IN NUMBER,
-  p_duration    IN NUMBER,
-  p_dist_km     IN NUMBER
-) AS
+    p_session_id IN NUMBER,
+    p_exercise_id IN NUMBER,
+    p_set_no IN NUMBER,
+    p_reps IN NUMBER DEFAULT NULL,
+    p_weight_kg IN NUMBER DEFAULT NULL,
+    p_duration_min IN NUMBER DEFAULT NULL,
+    p_dist_km IN NUMBER DEFAULT NULL,
+    p_steps IN NUMBER DEFAULT NULL
+) IS
 BEGIN
-  INSERT INTO WORKOUT_EXERCISE(SESSION_ID, EXERCISE_ID, SET_NO, REPS, WEIGHT_KG, DURATION_MIN, DIST_KM)
-  VALUES (p_session_id, p_exercise_id, p_set_no, p_reps, p_weight_kg, p_duration, p_dist_km);
+    INSERT INTO WORKOUT_EXERCISE (
+        SESSION_ID, EXERCISE_ID, SET_NO, REPS, WEIGHT_KG, 
+        DURATION_MIN, DIST_KM, STEPS_COUNT
+    ) VALUES (
+        p_session_id, p_exercise_id, p_set_no, p_reps, p_weight_kg,
+        p_duration_min, p_dist_km, p_steps
+    );
 END;
 /
-
 -- Daily summary view (workout minutes + calories)
 CREATE OR REPLACE VIEW V_DAILY_SUMMARY AS
 SELECT
@@ -86,3 +91,28 @@ LEFT JOIN (
   FROM NUTRITION_LOG
   GROUP BY USER_ID, LOG_DATE
 ) nl ON nl.USER_ID = u.USER_ID AND nl.LOG_DATE = d.the_date;
+
+
+--------------------------------------
+CREATE OR REPLACE FUNCTION CALCULATE_STEP_METRICS(
+    p_steps NUMBER,
+    p_activity_type VARCHAR2,
+    p_user_weight_kg NUMBER DEFAULT 70,
+    p_duration_min NUMBER
+) RETURN SYS_REFCURSOR
+IS
+    v_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN v_cursor FOR
+        SELECT 
+            p_steps as STEPS_COUNT,
+            ROUND(p_steps / sc.STEPS_PER_KM, 2) as DISTANCE_KM,
+            ROUND(sc.BASE_MET_VALUE * p_user_weight_kg * (p_duration_min/60), 0) as CALORIES_BURNED,
+            sc.BASE_MET_VALUE as MET_VALUE,
+            ROUND(p_steps / sc.STEPS_PER_KM / (p_duration_min/60), 2) as AVG_SPEED_KMH
+        FROM STEP_CONVERSION sc
+        WHERE UPPER(sc.ACTIVITY_TYPE) = UPPER(p_activity_type);
+    
+    RETURN v_cursor;
+END;
+/
