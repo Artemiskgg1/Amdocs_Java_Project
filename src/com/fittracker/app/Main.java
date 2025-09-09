@@ -10,9 +10,9 @@ import java.util.List;
 public class Main {
 
     private static final UserDAO userDAO = new UserDAOImpl();
-    private static final ExerciseDAO exerciseDAO = new ExerciseDAO();
-    private static final WorkoutDAO workoutDAO = new WorkoutDAO();
-    private static final NutritionDAO nutritionDAO = new NutritionDAO();
+    private static final ExerciseDAO exerciseDAO = new ExerciseDAOImpl();
+    private static final WorkoutDAO workoutDAO = new WorkoutDAOImpl();
+    private static final NutritionDAO nutritionDAO = new NutritionDAOImpl();
 
     public static void main(String[] args) {
         while (true) {
