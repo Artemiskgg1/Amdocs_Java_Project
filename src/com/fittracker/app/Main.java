@@ -288,7 +288,9 @@ public class Main {
             BeautifulConsole.printWarning("Duration required for accurate calculations");
             return null;
         }
-        
+    
+
+
         try {
             return workoutDAO.calculateStepMetrics(steps, activityType, userWeight, durationMin);
         } catch (Exception e) {
