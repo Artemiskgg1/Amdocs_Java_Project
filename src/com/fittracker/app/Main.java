@@ -4,6 +4,7 @@ import com.fittracker.dao.*;
 import com.fittracker.model.*;
 import com.fittracker.util.BeautifulConsole;
 import com.fittracker.util.ConsoleUtils;
+import com.fittracker.util.ExerciseMetricsCalculator;
 import java.sql.Date;
 import java.util.List;
 
@@ -143,67 +144,116 @@ public class Main {
     }
 
     private static void addSet() throws Exception {
-        BeautifulConsole.printHeader("ADD SET TO SESSION");
-        WorkoutSet w = new WorkoutSet();
-        w.sessionId  = (long) ConsoleUtils.promptInt("Session ID");
-        w.exerciseId = (long) ConsoleUtils.promptInt("Exercise ID");
-        w.setNo      = ConsoleUtils.promptInt("Set number");
-        
-        // Check if this is a step-based exercise
-        Exercise exercise = exerciseDAO.findById(w.exerciseId);
-        if (exercise != null && isStepBasedExercise(exercise.name)) {
-            BeautifulConsole.printInfo("🔍 Step-based exercise detected! Auto-calculation mode activated");
-            BeautifulConsole.printSeparator();
-            
-            String stepsInput = ConsoleUtils.prompt("Steps count");
-            if (!stepsInput.isEmpty()) {
-                w.steps = Integer.valueOf(stepsInput);
-                
-                String durMinInput = ConsoleUtils.prompt("Duration minutes");
-                Integer durationMin = durMinInput.isEmpty() ? null : Integer.valueOf(durMinInput);
-                w.durationMin = durationMin;
-                
-                String weightInput = ConsoleUtils.prompt("Your weight in kg (for calorie calc, default 70)");
-                double userWeight = weightInput.isEmpty() ? 70.0 : Double.valueOf(weightInput);
-                
-                String activityType = determineActivityType(exercise.name);
-                BeautifulConsole.showLoading("Calculating metrics");
-                
-                StepMetrics metrics = calculateStepMetrics(w.steps, activityType, userWeight, durationMin);
-                
-                if (metrics != null) {
-                    w.distKm = metrics.distanceKm;
-                    BeautifulConsole.printStepCalculations(metrics);
-                    
-                    String overrideDist = ConsoleUtils.prompt("Override distance? (blank to keep auto-calc)");
-                    if (!overrideDist.isEmpty()) {
-                        w.distKm = Double.valueOf(overrideDist);
-                        BeautifulConsole.printInfo("Distance overridden to " + w.distKm + " km");
-                    }
-                }
-            }
-            
-            String reps = ConsoleUtils.prompt("Reps (blank if NA)");
-            w.reps = reps.isEmpty() ? null : Integer.valueOf(reps);
-            String kg = ConsoleUtils.prompt("Weight kg (blank if NA)");
-            w.weightKg = kg.isEmpty() ? null : Double.valueOf(kg);
-            
-        } else {
-            BeautifulConsole.printInfo("Regular exercise - manual entry mode");
-            String reps = ConsoleUtils.prompt("Reps (blank if NA)");
-            w.reps = reps.isEmpty() ? null : Integer.valueOf(reps);
-            String kg = ConsoleUtils.prompt("Weight kg (blank if NA)");
-            w.weightKg = kg.isEmpty() ? null : Double.valueOf(kg);
-            String dm = ConsoleUtils.prompt("Duration min (blank if NA)");
-            w.durationMin = dm.isEmpty() ? null : Integer.valueOf(dm);
-            String dk = ConsoleUtils.prompt("Distance km (blank if NA)");
-            w.distKm = dk.isEmpty() ? null : Double.valueOf(dk);
-        }
-        
+    BeautifulConsole.printHeader("ADD SET TO SESSION");
+    WorkoutSet w = new WorkoutSet();
+    w.sessionId  = (long) ConsoleUtils.promptInt("Session ID");
+    w.exerciseId = (long) ConsoleUtils.promptInt("Exercise ID");
+    w.setNo      = ConsoleUtils.promptInt("Set number");
+    
+    // Get exercise details for smart input
+    Exercise exercise = exerciseDAO.findById(w.exerciseId);
+    if (exercise == null) {
+        BeautifulConsole.printError("Exercise not found!");
+        return;
+    }
+    
+    BeautifulConsole.printInfo("🎯 Exercise: " + exercise.name + " (" + exercise.category + ")");
+    BeautifulConsole.printSeparator();
+    
+    // Get user weight for calculations
+    String weightInput = ConsoleUtils.prompt("Your body weight in kg (for calculations, default 70)");
+    double userWeight = weightInput.isEmpty() ? 70.0 : Double.valueOf(weightInput);
+    
+    // Collect data based on exercise category
+    switch (exercise.category.toUpperCase()) {
+        case "STRENGTH" -> collectStrengthData(w, exercise);
+        case "CARDIO" -> collectCardioData(w, exercise);
+        case "FLEXIBILITY", "BALANCE" -> collectFlexibilityBalanceData(w, exercise);
+        default -> collectGeneralData(w, exercise);
+    }
+    
+    // Calculate comprehensive metrics
+    BeautifulConsole.showLoading("Calculating comprehensive metrics");
+    ExerciseMetrics metrics = ExerciseMetricsCalculator.calculateMetrics(exercise, w, userWeight);
+    
+    // Display beautiful metrics
+    BeautifulConsole.printExerciseMetrics(metrics);
+    
+    // Ask for confirmation or modifications
+    String confirm = ConsoleUtils.prompt("Save this set? (Y/n)");
+    if (confirm.isEmpty() || confirm.toLowerCase().startsWith("y")) {
         BeautifulConsole.showLoading("Adding set to session");
         workoutDAO.addSet(w);
-        BeautifulConsole.printSuccess("Set added successfully! 🎉");
+        BeautifulConsole.printSuccess("Set added with comprehensive metrics! 🎉");
+    } else {
+        BeautifulConsole.printInfo("Set cancelled");
     }
+}
+
+private static void collectStrengthData(WorkoutSet w, Exercise exercise) {
+    BeautifulConsole.printInfo("💪 STRENGTH EXERCISE - Enter your performance data:");
+    
+    String reps = ConsoleUtils.prompt("Reps performed");
+    w.reps = reps.isEmpty() ? null : Integer.valueOf(reps);
+    
+    String weight = ConsoleUtils.prompt("Weight used (kg)");
+    w.weightKg = weight.isEmpty() ? null : Double.valueOf(weight);
+    
+    String duration = ConsoleUtils.prompt("Rest time between sets (min) - optional");
+    w.durationMin = duration.isEmpty() ? null : Integer.valueOf(duration);
+    
+    // For bodyweight exercises
+    if (w.weightKg == null) {
+        BeautifulConsole.printInfo("💡 Tip: For bodyweight exercises, enter your body weight for accurate calculations");
+    }
+}
+
+private static void collectCardioData(WorkoutSet w, Exercise exercise) {
+    BeautifulConsole.printInfo("🏃‍♂️ CARDIO EXERCISE - Enter your activity data:");
+    
+    // Check if it's step-based
+    if (isStepBasedExercise(exercise.name)) {
+        String steps = ConsoleUtils.prompt("Steps count (if tracked)");
+        w.steps = steps.isEmpty() ? null : Integer.valueOf(steps);
+    }
+    
+    String distance = ConsoleUtils.prompt("Distance covered (km) - optional");
+    w.distKm = distance.isEmpty() ? null : Double.valueOf(distance);
+    
+    String duration = ConsoleUtils.prompt("Duration (minutes)");
+    w.durationMin = duration.isEmpty() ? null : Integer.valueOf(duration);
+    
+    // Additional cardio-specific data
+    String reps = ConsoleUtils.prompt("Intervals/rounds (if applicable)");
+    w.reps = reps.isEmpty() ? null : Integer.valueOf(reps);
+}
+
+private static void collectFlexibilityBalanceData(WorkoutSet w, Exercise exercise) {
+    BeautifulConsole.printInfo("🧘‍♀️ FLEXIBILITY/BALANCE EXERCISE - Enter duration:");
+    
+    String duration = ConsoleUtils.prompt("Duration (minutes)");
+    w.durationMin = duration.isEmpty() ? null : Integer.valueOf(duration);
+    
+    String reps = ConsoleUtils.prompt("Repetitions/Holds (if applicable)");
+    w.reps = reps.isEmpty() ? null : Integer.valueOf(reps);
+}
+
+private static void collectGeneralData(WorkoutSet w, Exercise exercise) {
+    BeautifulConsole.printInfo("🏋️ GENERAL EXERCISE - Enter available data:");
+    
+    String reps = ConsoleUtils.prompt("Reps/Count (if applicable)");
+    w.reps = reps.isEmpty() ? null : Integer.valueOf(reps);
+    
+    String weight = ConsoleUtils.prompt("Weight/Resistance (kg) - if applicable");
+    w.weightKg = weight.isEmpty() ? null : Double.valueOf(weight);
+    
+    String duration = ConsoleUtils.prompt("Duration (minutes)");
+    w.durationMin = duration.isEmpty() ? null : Integer.valueOf(duration);
+    
+    String distance = ConsoleUtils.prompt("Distance (km) - if applicable");
+    w.distKm = distance.isEmpty() ? null : Double.valueOf(distance);
+}
+
 
     private static void listSessions() throws Exception {
         BeautifulConsole.printHeader("WORKOUT SESSIONS");

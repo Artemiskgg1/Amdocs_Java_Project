@@ -1,5 +1,7 @@
 package com.fittracker.util;
 
+import com.fittracker.model.ExerciseMetrics;
+
 public class BeautifulConsole {
     
     // ANSI Color codes
@@ -29,10 +31,8 @@ public class BeautifulConsole {
     public static final String BOLD = "\033[1m";
     public static final String UNDERLINE = "\033[4m";
     public static final String BLINK = "\033[5m";
-    
-    
     private static final String BRIGHT_CYAN = "\033[96m";
-
+    
     // Clear screen
     public static void clearScreen() {
         System.out.print("\033[2J\033[H");
@@ -56,26 +56,26 @@ public class BeautifulConsole {
         System.out.println();
         
         System.out.println(BRIGHT_CYAN + "┌─ USER MANAGEMENT" + RESET);
-        System.out.println(CYAN + "│  1)" + RESET + " Create User " );
-        System.out.println(CYAN + "│  2)" + RESET + " List Users " );
-        System.out.println(CYAN + "│  3)" + RESET + " Update User Email " );
-        System.out.println(CYAN + "│  4)" + RESET + " Delete User " );
-        
+        System.out.println(CYAN + "│  1)" + RESET + " Create User ");
+        System.out.println(CYAN + "│  2)" + RESET + " List Users ");
+        System.out.println(CYAN + "│  3)" + RESET + " Update User Email ");
+        System.out.println(CYAN + "│  4)" + RESET + " Delete User ");
+
         System.out.println();
         System.out.println(BRIGHT_GREEN + "┌─ EXERCISE & WORKOUTS" + RESET);
-        System.out.println(GREEN + "│  5)" + RESET + " Add Exercise " );
-        System.out.println(GREEN + "│  6)" + RESET + " List Exercises " );
-        System.out.println(GREEN + "│  7)" + RESET + " Create Workout Session " );
-        System.out.println(GREEN + "│  8)" + RESET + " Add Set to Session " );
-        System.out.println(GREEN + "│  9)" + RESET + " List Sessions for User " );
+        System.out.println(GREEN + "│  5)" + RESET + " Add Exercise ");
+        System.out.println(GREEN + "│  6)" + RESET + " List Exercises ");
+        System.out.println(GREEN + "│  7)" + RESET + " Create Workout Session ");
+        System.out.println(GREEN + "│  8)" + RESET + " Add Set to Session ");
+        System.out.println(GREEN + "│  9)" + RESET + " List Sessions for User ");
 
         System.out.println();
         System.out.println(BRIGHT_YELLOW + "┌─ NUTRITION & WELLNESS" + RESET);
-        System.out.println(YELLOW + "│  10)" + RESET + " Add Nutrition Log " );
-        System.out.println(YELLOW + "│  11)" + RESET + " List Nutrition for User+Date " );
+        System.out.println(YELLOW + "│  10)" + RESET + " Add Nutrition Log ");
+        System.out.println(YELLOW + "│  11)" + RESET + " List Nutrition for User+Date ");
 
         System.out.println();
-        System.out.println(BRIGHT_RED + "│  0)" + RESET + " Exit " );
+        System.out.println(BRIGHT_RED + "│  0)" + RESET + " Exit ");
         System.out.println();
         
         System.out.print(BOLD + BRIGHT_BLUE + "Choose an option: " + RESET);
@@ -83,7 +83,7 @@ public class BeautifulConsole {
     
     // Success message
     public static void printSuccess(String message) {
-        System.out.println(BRIGHT_GREEN + " " + message + RESET);
+        System.out.println(BRIGHT_GREEN +" " + message + RESET);
     }
     
     // Error message
@@ -98,7 +98,7 @@ public class BeautifulConsole {
     
     // Warning message
     public static void printWarning(String message) {
-        System.out.println(BRIGHT_YELLOW + message + RESET);
+        System.out.println(BRIGHT_YELLOW +message + RESET);
     }
     
     // Print user table beautifully
@@ -153,15 +153,47 @@ public class BeautifulConsole {
         System.out.println(GREEN + "└─────┴─────────────────────┴─────────────┴───────────┴─────────┘" + RESET);
     }
     
-    // Print step calculation results beautifully
-    public static void printStepCalculations(com.fittracker.model.StepMetrics metrics) {
-        System.out.println(BOLD + BRIGHT_YELLOW + "\n" +" AUTO-CALCULATED METRICS "+ RESET);
-        System.out.println(YELLOW + "┌──────────────────────┬──────────────┐" + RESET);
-        System.out.printf(YELLOW + "│" + RESET + " Distance             " + YELLOW + "│" + RESET + " %10.2f km " + YELLOW + "│" + RESET + "%n", metrics.distanceKm);
-        System.out.printf(YELLOW + "│" + RESET + " Calories Burned      " + YELLOW + "│" + RESET + " %10.0f cal" + YELLOW + "│" + RESET + "%n", metrics.caloriesBurned);
-        System.out.printf(YELLOW + "│" + RESET + " Average Speed        " + YELLOW + "│" + RESET + " %10.2f km/h" + YELLOW + "│" + RESET + "%n", metrics.avgSpeedKmh);
-        System.out.printf(YELLOW + "│" + RESET + " MET Value Used       " + YELLOW + "│" + RESET + " %12.1f " + YELLOW + "│" + RESET + "%n", metrics.metValue);
-        System.out.println(YELLOW + "└──────────────────────┴──────────────┘" + RESET);
+    // Print comprehensive exercise metrics
+    public static void printExerciseMetrics(ExerciseMetrics metrics) {
+        System.out.println(BOLD + BRIGHT_YELLOW + "\n" +" COMPREHENSIVE EXERCISE METRICS " +RESET);
+        System.out.println(YELLOW + "┌─────────────────────────┬──────────────────────┐" + RESET);
+        System.out.printf(YELLOW + "│" + RESET + " Exercise               " + YELLOW + "│" + RESET + " %-20s " + YELLOW + "│" + RESET + "%n", truncate(metrics.exerciseName, 20));
+        System.out.printf(YELLOW + "│" + RESET + " Category               " + YELLOW + "│" + RESET + " %-20s " + YELLOW + "│" + RESET + "%n", metrics.category);
+        System.out.printf(YELLOW + "│" + RESET + " Intensity              " + YELLOW + "│" + RESET + " %-20s " + YELLOW + "│" + RESET + "%n", metrics.intensity);
+        System.out.printf(YELLOW + "│" + RESET + " Calories Burned        " + YELLOW + "│" + RESET + " %18.0f cal" + YELLOW + "│" + RESET + "%n", metrics.caloriesBurned);
+        
+        // Show category-specific metrics
+        if ("STRENGTH".equals(metrics.category.toUpperCase())) {
+            if (metrics.volume > 0) {
+                System.out.printf(YELLOW + "│" + RESET + " Volume                 " + YELLOW + "│" + RESET + " %15.1f %s " + YELLOW + "│" + RESET + "%n", 
+                    metrics.volume, metrics.volumeUnit);
+            }
+            if (metrics.oneRepMax != null && metrics.oneRepMax > 0) {
+                System.out.printf(YELLOW + "│" + RESET + " Estimated 1RM          " + YELLOW + "│" + RESET + " %18.1f kg" + YELLOW + "│" + RESET + "%n", metrics.oneRepMax);
+            }
+        } else if ("CARDIO".equals(metrics.category.toUpperCase())) {
+            if (metrics.distance != null && metrics.distance > 0) {
+                System.out.printf(YELLOW + "│" + RESET + " Distance               " + YELLOW + "│" + RESET + " %15.2f %s " + YELLOW + "│" + RESET + "%n", 
+                    metrics.distance, metrics.distanceUnit);
+            }
+            if (metrics.avgSpeed != null && metrics.avgSpeed > 0) {
+                System.out.printf(YELLOW + "│" + RESET + " Average Speed          " + YELLOW + "│" + RESET + " %15.2f %s " + YELLOW + "│" + RESET + "%n", 
+                    metrics.avgSpeed, metrics.speedUnit);
+            }
+            if (metrics.pace != null && metrics.pace > 0) {
+                System.out.printf(YELLOW + "│" + RESET + " Pace                   " + YELLOW + "│" + RESET + " %15.2f %s " + YELLOW + "│" + RESET + "%n", 
+                    metrics.pace, metrics.paceUnit);
+            }
+            if (metrics.estimatedAvgHeartRate != null && metrics.estimatedAvgHeartRate > 0) {
+                System.out.printf(YELLOW + "│" + RESET + " Est. Avg Heart Rate    " + YELLOW + "│" + RESET + " %16.0f bpm" + YELLOW + "│" + RESET + "%n", 
+                    metrics.estimatedAvgHeartRate);
+            }
+        }
+        
+        System.out.println(YELLOW + "├─────────────────────────┴──────────────────────┤" + RESET);
+        System.out.printf(YELLOW + "│" + RESET + " " + BRIGHT_CYAN + "Additional Info: " + RESET + "%-31s " + YELLOW + "│" + RESET + "%n", 
+            truncate(metrics.additionalInfo, 31));
+        System.out.println(YELLOW + "└─────────────────────────────────────────────────┘" + RESET);
     }
     
     // Print workout sessions
@@ -171,7 +203,7 @@ public class BeautifulConsole {
             return;
         }
         
-        System.out.println(BOLD + BRIGHT_GREEN + "\n" +" WORKOUT SESSIONS " + RESET);
+        System.out.println(BOLD + BRIGHT_GREEN + "\n" + " WORKOUT SESSIONS " + RESET);
         System.out.println(GREEN + "┌─────┬────────────┬──────────┬─────────────────────────────┐" + RESET);
         System.out.println(GREEN + "│ ID  │ Date       │ Duration │ Notes                       │" + RESET);
         System.out.println(GREEN + "├─────┼────────────┼──────────┼─────────────────────────────┤" + RESET);
