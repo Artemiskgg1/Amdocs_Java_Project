@@ -9,7 +9,7 @@ import java.util.List;
 
 public class Main {
 
-    private static final UserDAO userDAO = new UserDAO();
+    private static final UserDAO userDAO = new UserDAOImpl();
     private static final ExerciseDAO exerciseDAO = new ExerciseDAO();
     private static final WorkoutDAO workoutDAO = new WorkoutDAO();
     private static final NutritionDAO nutritionDAO = new NutritionDAO();
@@ -288,9 +288,9 @@ public class Main {
             BeautifulConsole.printWarning("Duration required for accurate calculations");
             return null;
         }
-    
+        
 
-
+        
         try {
             return workoutDAO.calculateStepMetrics(steps, activityType, userWeight, durationMin);
         } catch (Exception e) {
