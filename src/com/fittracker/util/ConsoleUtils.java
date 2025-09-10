@@ -14,7 +14,6 @@ public class ConsoleUtils {
                 System.out.print(label + ": ");
                 String input = SC.nextLine().trim();
 
-                // Check if input is alphanumeric
                 if (!input.matches("^[a-zA-Z0-9]+$")) {
                     throw new IllegalArgumentException("Input must be alphanumeric.");
                 }
@@ -28,8 +27,6 @@ public class ConsoleUtils {
         }
     }
 
-    // In ConsoleUtils
-    // In ConsoleUtils
     public static String promptGender(String label) {
         while (true) {
             System.out.print(label + ": ");
@@ -80,9 +77,8 @@ public class ConsoleUtils {
                 return "";
             }
             try {
-                // Validate actual date (not just regex). This accepts yyyy-MM-dd.
                 LocalDate.parse(input);
-                return input; // Return the original string to keep your main code unchanged
+                return input;
             } catch (DateTimeParseException e) {
                 System.out.println("Enter date as yyyy-mm-dd (e.g., 1990-07-15)"
                         + (allowBlank ? " or leave blank." : "."));
