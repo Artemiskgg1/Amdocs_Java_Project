@@ -101,7 +101,6 @@ public class BeautifulConsole {
         System.out.println(BRIGHT_YELLOW +message + RESET);
     }
     
-    // Print user table beautifully
     public static void printUserTable(java.util.List<com.fittracker.model.User> users) {
         if (users.isEmpty()) {
             printWarning("No users found!");
@@ -128,7 +127,7 @@ public class BeautifulConsole {
         System.out.println(CYAN + "└─────┴──────────────────┴─────────────────────┴────────┴────────────┴─────────┘" + RESET);
     }
     
-    // Print exercise table
+    
     public static void printExerciseTable(java.util.List<com.fittracker.model.Exercise> exercises) {
         if (exercises.isEmpty()) {
             printWarning("No exercises found!");
