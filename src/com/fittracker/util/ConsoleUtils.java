@@ -14,13 +14,13 @@ public class ConsoleUtils {
                 System.out.print(label + ": ");
                 String input = SC.nextLine().trim();
 
-                if (!input.matches("^[a-zA-Z0-9]+$")) {
-                    throw new IllegalArgumentException("Input must be alphanumeric.");
+                if (!input.matches("^[A-Za-z][A-Za-z0-9 ]*$")) {
+                    throw new IllegalArgumentException("Input must start with a letter and can only contain letters, numbers, and spaces.");
                 }
 
                 return input;
             } catch (IllegalArgumentException e) {
-                System.out.println("Invalid input. Please enter only alphanumeric characters.");
+                System.out.println("Invalid input. Please enter a valid name (letters, numbers, spaces, but not starting with a number).");
             } catch (Exception e) {
                 System.out.println("An unexpected error occurred. Please try again.");
             }
