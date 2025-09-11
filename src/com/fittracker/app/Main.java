@@ -103,14 +103,11 @@ public class Main {
 
         long id = ConsoleUtils.promptInt("User ID");
 
-        // validate user exists
         User u = userDAO.findById(id);
         if (u == null) {
             BeautifulConsole.printError("User not found");
             return;
         }
-
-        // use promptEmail for validation
         String email = ConsoleUtils.promptEmail("New email", false);
         u.email = email;
 
@@ -220,13 +217,13 @@ public class Main {
 
         switch (exercise.category.toUpperCase()) {
             case "STRENGTH" ->
-                collectStrengthData(w, exercise);
+                collectStrengthData(w);
             case "CARDIO" ->
                 collectCardioData(w, exercise);
             case "FLEXIBILITY", "BALANCE" ->
-                collectFlexibilityBalanceData(w, exercise);
+                collectFlexibilityBalanceData(w);
             default ->
-                collectGeneralData(w, exercise);
+                collectGeneralData(w);
         }
 
         BeautifulConsole.showLoading("Calculating comprehensive metrics");
@@ -244,7 +241,7 @@ public class Main {
         }
     }
 
-    private static void collectStrengthData(WorkoutSet w, Exercise exercise) throws GoBackException {
+    private static void collectStrengthData(WorkoutSet w) throws GoBackException {
         BeautifulConsole.printInfo("STRENGTH EXERCISE - Enter your performance data:");
 
         String reps = ConsoleUtils.prompt("Reps performed");
@@ -279,7 +276,7 @@ public class Main {
         w.reps = reps.isEmpty() ? null : Integer.valueOf(reps);
     }
 
-    private static void collectFlexibilityBalanceData(WorkoutSet w, Exercise exercise) throws GoBackException {
+    private static void collectFlexibilityBalanceData(WorkoutSet w) throws GoBackException {
         BeautifulConsole.printInfo("FLEXIBILITY/BALANCE EXERCISE - Enter duration:");
 
         String duration = ConsoleUtils.prompt("Duration (minutes)");
@@ -289,7 +286,7 @@ public class Main {
         w.reps = reps.isEmpty() ? null : Integer.valueOf(reps);
     }
 
-    private static void collectGeneralData(WorkoutSet w, Exercise exercise) throws GoBackException {
+    private static void collectGeneralData(WorkoutSet w) throws GoBackException {
         BeautifulConsole.printInfo("🏋️ GENERAL EXERCISE - Enter available data:");
 
         String reps = ConsoleUtils.prompt("Reps/Count (if applicable)");
@@ -371,9 +368,9 @@ public class Main {
                     n.mealType,
                     truncate(n.item, 20),
                     n.calories == null ? "N/A" : n.calories.toString(),
-                    n.proteinG == null ? 0 : n.proteinG,
-                    n.carbsG == null ? 0 : n.carbsG,
-                    n.fatG == null ? 0 : n.fatG);
+                    n.proteinG == null ? 0.0 : n.proteinG,
+                    n.carbsG == null ? 0.0 : n.carbsG,
+                    n.fatG == null ? 0.0 : n.fatG);
         }
         System.out.println(BeautifulConsole.YELLOW + "└─────┴────────────┴──────────────────────┴─────────┴─────────┴─────────┴─────────┘" + BeautifulConsole.RESET);
     }

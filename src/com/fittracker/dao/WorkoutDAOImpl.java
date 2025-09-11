@@ -93,12 +93,4 @@ public class WorkoutDAOImpl implements WorkoutDAO {
         }
     }
 
-    @Override
-    public boolean deleteSession(long sessionId) throws SQLException {
-        try (Connection c = Database.getConnection(); PreparedStatement ps = c.prepareStatement("DELETE FROM WORKOUT_SESSION WHERE SESSION_ID=?")) {
-            ps.setLong(1, sessionId);
-            return ps.executeUpdate() == 1;
-        }
-    }
-
 }

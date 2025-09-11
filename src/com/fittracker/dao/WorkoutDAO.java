@@ -15,6 +15,4 @@ public interface WorkoutDAO {
 
     boolean updateSessionDuration(long sessionId, int duration) throws SQLException;
 
-    boolean deleteSession(long sessionId) throws SQLException;
-
 }

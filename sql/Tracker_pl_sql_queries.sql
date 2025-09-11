@@ -43,3 +43,6 @@ BEGIN
     );
 END;
 /
+-- SELECT * 
+-- FROM employees 
+-- WHERE manager_id IS NULL;
