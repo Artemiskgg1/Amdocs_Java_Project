@@ -4,6 +4,7 @@ import com.fittracker.dao.*;
 import com.fittracker.model.*;
 import com.fittracker.util.BeautifulConsole;
 import com.fittracker.util.ConsoleUtils;
+import com.fittracker.util.ConsoleUtils.GoBackException;
 import com.fittracker.util.ExerciseMetricsCalculator;
 import java.io.IOException;
 import java.sql.Date;
@@ -19,7 +20,7 @@ public class Main {
     public static void main(String[] args) {
         while (true) {
             BeautifulConsole.printMenu();
-            int ch = ConsoleUtils.promptInt("");
+            int ch = ConsoleUtils.promptMenuChoice("");
             try {
                 switch (ch) {
                     case 1 ->
@@ -52,9 +53,14 @@ public class Main {
                         BeautifulConsole.printError("Invalid choice. Please try again.");
                 }
 
-                System.out.print("\nPress Enter to continue...");
-                System.in.read();
+                if (ch >= 1 && ch <= 11) {
+                    System.out.print("\nPress Enter to continue...");
+                    System.in.read();
+                }
 
+            } catch (GoBackException e) {
+                BeautifulConsole.printInfo("Returning to main menu...");
+                // Continue to next iteration of main loop
             } catch (Exception e) {
                 BeautifulConsole.printError(e.getMessage());
                 e.printStackTrace(System.out);
@@ -69,14 +75,16 @@ public class Main {
 
     private static void createUser() throws Exception {
         BeautifulConsole.printHeader("CREATE NEW USER");
+        BeautifulConsole.printInfo("Tip: Type 'q' at any prompt to return to main menu");
+        BeautifulConsole.printSeparator();
+
         User u = new User();
         u.fullName = ConsoleUtils.promptName("Full name");
         u.email = ConsoleUtils.promptEmail("Email", false);
         u.gender = ConsoleUtils.promptGender("Gender (M/F/O)");
         String dob = ConsoleUtils.promptDateString("DOB (yyyy-mm-dd or blank)", true);
         u.dob = dob.isEmpty() ? null : java.sql.Date.valueOf(dob);
-        String h = ConsoleUtils.prompt("Height cm (blank to skip)");
-        u.heightCm = h.isEmpty() ? null : Double.valueOf(h);
+        u.heightCm = ConsoleUtils.promptHeightCm("Height cm (blank to skip)", true);
         BeautifulConsole.showLoading("Creating user");
         long id = userDAO.create(u);
         BeautifulConsole.printSuccess("Created USER_ID = " + id);
@@ -90,14 +98,19 @@ public class Main {
 
     private static void updateUserEmail() throws Exception {
         BeautifulConsole.printHeader("UPDATE USER EMAIL");
+        BeautifulConsole.printInfo("Tip: Type 'q' at any prompt to return to main menu");
+        BeautifulConsole.printSeparator();
+
         long id = ConsoleUtils.promptInt("User ID");
-        String email = ConsoleUtils.prompt("New email");
+
         User u = userDAO.findById(id);
         if (u == null) {
             BeautifulConsole.printError("User not found");
             return;
         }
+        String email = ConsoleUtils.promptEmail("New email", false);
         u.email = email;
+
         if (userDAO.update(u)) {
             BeautifulConsole.printSuccess("Email updated successfully!");
         }
@@ -105,6 +118,9 @@ public class Main {
 
     private static void deleteUser() throws Exception {
         BeautifulConsole.printHeader("DELETE USER");
+        BeautifulConsole.printInfo("Tip: Type 'q' at any prompt to return to main menu");
+        BeautifulConsole.printSeparator();
+
         long id = ConsoleUtils.promptInt("User ID");
         BeautifulConsole.printWarning("This will delete all user data including sessions and logs!");
         String confirm = ConsoleUtils.prompt("Type 'DELETE' to confirm");
@@ -121,6 +137,10 @@ public class Main {
     }
 
     private static void addExercise() throws Exception {
+        BeautifulConsole.printHeader("ADD EXERCISE");
+        BeautifulConsole.printInfo("Tip: Type 'q' at any prompt to return to main menu");
+        BeautifulConsole.printSeparator();
+
         String password = ConsoleUtils.prompt("Enter admin password to continue");
         if (!"12345".equals(password)) {
             BeautifulConsole.printError("Access denied. Only admin can add exercises.");
@@ -147,12 +167,25 @@ public class Main {
 
     private static void createSession() throws Exception {
         BeautifulConsole.printHeader("CREATE WORKOUT SESSION");
+        BeautifulConsole.printInfo("Tip: Type 'q' at any prompt to return to main menu");
+        BeautifulConsole.printSeparator();
+
         WorkoutSession s = new WorkoutSession();
-        s.userId = (long) ConsoleUtils.promptInt("User ID");
-        String d = ConsoleUtils.prompt("Session date (yyyy-mm-dd)");
-        s.sessionDate = Date.valueOf(d);
-        String dur = ConsoleUtils.prompt("Duration minutes (blank to skip)");
-        s.durationMin = dur.isEmpty() ? null : Integer.valueOf(dur);
+
+        while (true) {
+            long enteredId = (long) ConsoleUtils.promptInt("User ID");
+            if (!userDAO.existsById(enteredId)) {
+                BeautifulConsole.printError("User ID " + enteredId + " does not exist. Try again.");
+                continue;
+            }
+            s.userId = enteredId;
+            break;
+        }
+
+        s.sessionDate = ConsoleUtils.promptSessionDate("Session date (yyyy-mm-dd)");
+
+        s.durationMin = ConsoleUtils.promptDuration("Duration minutes (blank to skip)", true);
+
         s.notes = ConsoleUtils.prompt("Notes (blank allowed)");
 
         BeautifulConsole.showLoading("Creating workout session");
@@ -162,10 +195,13 @@ public class Main {
 
     private static void addSet() throws Exception {
         BeautifulConsole.printHeader("ADD SET TO SESSION");
+        BeautifulConsole.printInfo("Tip: Type 'q' at any prompt to return to main menu");
+        BeautifulConsole.printSeparator();
+
         WorkoutSet w = new WorkoutSet();
         w.sessionId = (long) ConsoleUtils.promptInt("Session ID");
         w.exerciseId = (long) ConsoleUtils.promptInt("Exercise ID");
-        w.setNo = ConsoleUtils.promptInt("Set number");
+        w.setNo = ConsoleUtils.promptInt("Set Number");
 
         Exercise exercise = exerciseDAO.findById(w.exerciseId);
         if (exercise == null) {
@@ -173,7 +209,7 @@ public class Main {
             return;
         }
 
-        BeautifulConsole.printInfo("🎯 Exercise: " + exercise.name + " (" + exercise.category + ")");
+        BeautifulConsole.printInfo("Exercise: " + exercise.name + " (" + exercise.category + ")");
         BeautifulConsole.printSeparator();
 
         String weightInput = ConsoleUtils.prompt("Your body weight in kg (for calculations, default 70)");
@@ -181,13 +217,13 @@ public class Main {
 
         switch (exercise.category.toUpperCase()) {
             case "STRENGTH" ->
-                collectStrengthData(w, exercise);
+                collectStrengthData(w);
             case "CARDIO" ->
                 collectCardioData(w, exercise);
             case "FLEXIBILITY", "BALANCE" ->
-                collectFlexibilityBalanceData(w, exercise);
+                collectFlexibilityBalanceData(w);
             default ->
-                collectGeneralData(w, exercise);
+                collectGeneralData(w);
         }
 
         BeautifulConsole.showLoading("Calculating comprehensive metrics");
@@ -199,14 +235,14 @@ public class Main {
         if (confirm.isEmpty() || confirm.toLowerCase().startsWith("y")) {
             BeautifulConsole.showLoading("Adding set to session");
             workoutDAO.addSet(w);
-            BeautifulConsole.printSuccess("Set added with comprehensive metrics! 🎉");
+            BeautifulConsole.printSuccess("Set added with comprehensive metrics!");
         } else {
             BeautifulConsole.printInfo("Set cancelled");
         }
     }
 
-    private static void collectStrengthData(WorkoutSet w, Exercise exercise) {
-        BeautifulConsole.printInfo("💪 STRENGTH EXERCISE - Enter your performance data:");
+    private static void collectStrengthData(WorkoutSet w) throws GoBackException {
+        BeautifulConsole.printInfo("STRENGTH EXERCISE - Enter your performance data:");
 
         String reps = ConsoleUtils.prompt("Reps performed");
         w.reps = reps.isEmpty() ? null : Integer.valueOf(reps);
@@ -218,12 +254,12 @@ public class Main {
         w.durationMin = duration.isEmpty() ? null : Integer.valueOf(duration);
 
         if (w.weightKg == null) {
-            BeautifulConsole.printInfo("💡 Tip: For bodyweight exercises, enter your body weight for accurate calculations");
+            BeautifulConsole.printInfo("Tip: For bodyweight exercises, enter your body weight for accurate calculations");
         }
     }
 
-    private static void collectCardioData(WorkoutSet w, Exercise exercise) {
-        BeautifulConsole.printInfo("🏃‍♂️ CARDIO EXERCISE - Enter your activity data:");
+    private static void collectCardioData(WorkoutSet w, Exercise exercise) throws GoBackException {
+        BeautifulConsole.printInfo("CARDIO EXERCISE - Enter your activity data:");
 
         if (isStepBasedExercise(exercise.name)) {
             String steps = ConsoleUtils.prompt("Steps count (if tracked)");
@@ -240,8 +276,8 @@ public class Main {
         w.reps = reps.isEmpty() ? null : Integer.valueOf(reps);
     }
 
-    private static void collectFlexibilityBalanceData(WorkoutSet w, Exercise exercise) {
-        BeautifulConsole.printInfo("🧘‍♀️ FLEXIBILITY/BALANCE EXERCISE - Enter duration:");
+    private static void collectFlexibilityBalanceData(WorkoutSet w) throws GoBackException {
+        BeautifulConsole.printInfo("FLEXIBILITY/BALANCE EXERCISE - Enter duration:");
 
         String duration = ConsoleUtils.prompt("Duration (minutes)");
         w.durationMin = duration.isEmpty() ? null : Integer.valueOf(duration);
@@ -250,7 +286,7 @@ public class Main {
         w.reps = reps.isEmpty() ? null : Integer.valueOf(reps);
     }
 
-    private static void collectGeneralData(WorkoutSet w, Exercise exercise) {
+    private static void collectGeneralData(WorkoutSet w) throws GoBackException {
         BeautifulConsole.printInfo("🏋️ GENERAL EXERCISE - Enter available data:");
 
         String reps = ConsoleUtils.prompt("Reps/Count (if applicable)");
@@ -268,6 +304,9 @@ public class Main {
 
     private static void listSessions() throws Exception {
         BeautifulConsole.printHeader("WORKOUT SESSIONS");
+        BeautifulConsole.printInfo("Tip: Type 'q' at any prompt to return to main menu");
+        BeautifulConsole.printSeparator();
+
         long userId = ConsoleUtils.promptInt("User ID");
         List<WorkoutSession> sessions = workoutDAO.listSessionsForUser(userId);
         BeautifulConsole.printWorkoutSessions(sessions);
@@ -275,6 +314,9 @@ public class Main {
 
     private static void addNutrition() throws Exception {
         BeautifulConsole.printHeader("ADD NUTRITION LOG");
+        BeautifulConsole.printInfo("Tip: Type 'q' at any prompt to return to main menu");
+        BeautifulConsole.printSeparator();
+
         NutritionLog n = new NutritionLog();
         n.userId = (long) ConsoleUtils.promptInt("User ID");
         n.logDate = Date.valueOf(ConsoleUtils.prompt("Date (yyyy-mm-dd)"));
@@ -296,6 +338,9 @@ public class Main {
 
     private static void listNutrition() throws Exception {
         BeautifulConsole.printHeader("NUTRITION LOG");
+        BeautifulConsole.printInfo("Tip: Type 'q' at any prompt to return to main menu");
+        BeautifulConsole.printSeparator();
+
         long userId = ConsoleUtils.promptInt("User ID");
         java.sql.Date d = Date.valueOf(ConsoleUtils.prompt("Date (yyyy-mm-dd)"));
         List<NutritionLog> list = nutritionDAO.listForUserOnDate(userId, d);
@@ -305,7 +350,7 @@ public class Main {
             return;
         }
 
-        System.out.println(BeautifulConsole.BOLD + BeautifulConsole.BRIGHT_YELLOW + "\n🍎 NUTRITION LOG FOR " + d + BeautifulConsole.RESET);
+        System.out.println(BeautifulConsole.BOLD + BeautifulConsole.BRIGHT_YELLOW + "\nNUTRITION LOG FOR " + d + BeautifulConsole.RESET);
         System.out.println(BeautifulConsole.YELLOW + "┌─────┬────────────┬──────────────────────┬─────────┬─────────┬─────────┬─────────┐" + BeautifulConsole.RESET);
         System.out.println(BeautifulConsole.YELLOW + "│ ID  │ Meal Type  │ Item                 │ Cal     │ Protein │ Carbs   │ Fat     │" + BeautifulConsole.RESET);
         System.out.println(BeautifulConsole.YELLOW + "├─────┼────────────┼──────────────────────┼─────────┼─────────┼─────────┼─────────┤" + BeautifulConsole.RESET);
@@ -323,9 +368,9 @@ public class Main {
                     n.mealType,
                     truncate(n.item, 20),
                     n.calories == null ? "N/A" : n.calories.toString(),
-                    n.proteinG == null ? 0 : n.proteinG,
-                    n.carbsG == null ? 0 : n.carbsG,
-                    n.fatG == null ? 0 : n.fatG);
+                    n.proteinG == null ? 0.0 : n.proteinG,
+                    n.carbsG == null ? 0.0 : n.carbsG,
+                    n.fatG == null ? 0.0 : n.fatG);
         }
         System.out.println(BeautifulConsole.YELLOW + "└─────┴────────────┴──────────────────────┴─────────┴─────────┴─────────┴─────────┘" + BeautifulConsole.RESET);
     }

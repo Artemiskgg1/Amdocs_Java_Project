@@ -1,8 +1,8 @@
 package com.fittracker.dao;
 
 import com.fittracker.model.NutritionLog;
-import java.sql.SQLException;
 import java.sql.Date;
+import java.sql.SQLException;
 import java.util.List;
 
 public interface NutritionDAO {
@@ -11,7 +11,4 @@ public interface NutritionDAO {
 
     List<NutritionLog> listForUserOnDate(long userId, Date date) throws SQLException;
 
-    boolean updateCalories(long logId, int calories) throws SQLException;
-
-    boolean delete(long logId) throws SQLException;
 }
