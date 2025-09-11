@@ -112,7 +112,7 @@ public class UserDAOImpl implements UserDAO {
         try (Connection c = Database.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setLong(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
-                return rs.next(); // true if row exists
+                return rs.next();
             }
         }
     }

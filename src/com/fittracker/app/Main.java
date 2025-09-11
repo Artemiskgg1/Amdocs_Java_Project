@@ -204,6 +204,7 @@ public class Main {
         WorkoutSet w = new WorkoutSet();
         w.sessionId = (long) ConsoleUtils.promptInt("Session ID");
         w.exerciseId = (long) ConsoleUtils.promptInt("Exercise ID");
+        w.setNo = ConsoleUtils.promptInt("Set Number");
 
         Exercise exercise = exerciseDAO.findById(w.exerciseId);
         if (exercise == null) {

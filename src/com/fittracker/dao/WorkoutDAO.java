@@ -1,6 +1,5 @@
 package com.fittracker.dao;
 
-import com.fittracker.model.StepMetrics;
 import com.fittracker.model.WorkoutSession;
 import com.fittracker.model.WorkoutSet;
 import java.sql.SQLException;
@@ -18,5 +17,4 @@ public interface WorkoutDAO {
 
     boolean deleteSession(long sessionId) throws SQLException;
 
-    StepMetrics calculateStepMetrics(int steps, String activityType, double userWeight, int durationMin) throws SQLException;
 }
